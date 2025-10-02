@@ -3,7 +3,7 @@
     "api/webhook.js": {
       "maxDuration": 30
     },
-    "api/check-shipments.js": {
+    "api/buscar-envios.js": {
       "maxDuration": 60
     }
   },
@@ -14,9 +14,9 @@
       "dest": "/api/webhook.js"
     },
     {
-      "src": "/api/check-shipments",
+      "src": "/api/buscar-envios",
       "methods": ["GET", "POST", "OPTIONS"],
-      "dest": "/api/check-shipments.js"
+      "dest": "/api/buscar-envios.js"
     },
     {
       "src": "/(.*)",
