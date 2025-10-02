@@ -5,12 +5,6 @@
     },
     "api/registrar-pacote.js": {
       "maxDuration": 30
-    },
-    "api/diagnostico.js": {
-      "maxDuration": 30
-    },
-    "api/buscar-envios.js": {
-      "maxDuration": 60
     }
   },
   "routes": [
@@ -20,19 +14,9 @@
       "dest": "/api/webhook.js"
     },
     {
-      "src": "/api/registrar-pacote",
+      "src": "/api/registrar-pacote", 
       "methods": ["GET", "POST", "OPTIONS"],
       "dest": "/api/registrar-pacote.js"
-    },
-    {
-      "src": "/api/diagnostico",
-      "methods": ["GET", "POST", "OPTIONS"],
-      "dest": "/api/diagnostico.js"
-    },
-    {
-      "src": "/api/buscar-envios",
-      "methods": ["GET", "POST", "OPTIONS"],
-      "dest": "/api/buscar-envios.js"
     },
     {
       "src": "/(.*)",
