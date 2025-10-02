@@ -69,23 +69,34 @@ async function processarNotificacao(notificacao) {
   if (shippingId) {
     console.log('📦 Shipment ID encontrado:', shippingId);
     
-    // 🔑 PASSO 1: Gerar access token
-    const accessToken = await gerarAccessToken();
-    
-    // 📦 PASSO 2: Buscar dados completos do shipment
-    const shipmentData = await buscarDadosShipment(shippingId, accessToken);
-    
-    // 📊 PASSO 3: Salvar no Google Sheets
-    const sheetResult = await salvarNoGoogleSheets(shipmentData);
-    
-    return {
-      tipo: notificacao.action || notificacao.topic,
-      shipping_id: shippingId,
-      shipment_data: shipmentData,
-      sheet_result: sheetResult,
-      processado_em: new Date().toISOString(),
-      status: 'dados_salvos'
-    };
+    try {
+      // 🔑 PASSO 1: Gerar access token
+      const accessToken = await gerarAccessToken();
+      
+      // 📦 PASSO 2: Buscar dados completos do shipment
+      const shipmentData = await buscarDadosShipment(shippingId, accessToken);
+      
+      // 📊 PASSO 3: Salvar no Google Sheets
+      const sheetResult = await salvarNoGoogleSheets(shipmentData);
+      
+      return {
+        tipo: notificacao.action || notificacao.topic,
+        shipping_id: shippingId,
+        shipment_data: shipmentData,
+        sheet_result: sheetResult,
+        processado_em: new Date().toISOString(),
+        status: 'dados_salvos'
+      };
+    } catch (error) {
+      console.error('❌ Erro no processamento:', error);
+      return {
+        tipo: notificacao.action || notificacao.topic,
+        shipping_id: shippingId,
+        processado_em: new Date().toISOString(),
+        status: 'erro',
+        erro: error.message
+      };
+    }
   }
   
   return {
