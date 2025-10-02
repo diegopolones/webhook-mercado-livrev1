@@ -7,18 +7,6 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "node-fetch": "^2.6.7"
-  }
-}
-{
-  "name": "webhook-mercado-livre",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
-  },
-  "dependencies": {
     "node-fetch": "^2.6.7",
     "google-spreadsheet": "^4.1.4",
     "google-auth-library": "^9.0.0"
