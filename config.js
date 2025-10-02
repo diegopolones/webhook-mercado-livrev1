@@ -9,7 +9,7 @@ export const CONFIG = {
   GOOGLE_SHEET_ID: '1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8',
   
   // Service Account (você vai preencher depois)
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: 'seu-email-da-service-account@seu-projeto.iam.gserviceaccount.com',
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: 'webhook-mercado-livre@webhook-mercado-livre.iam.gserviceaccount.com',
   GOOGLE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\nSUA_CHAVE_PRIVADA_AQUI\n-----END PRIVATE KEY-----\n',
   
   // Webhook
