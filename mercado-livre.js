@@ -3,30 +3,79 @@ import { CONFIG } from './config.js';
 
 export async function gerarAccessToken() {
   try {
+    console.log('🔄 Tentando autenticar com Mercado Livre...');
+    
     const response = await fetch('https://api.mercadolibre.com/oauth/token', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        grant_type: 'refresh_token',
-        client_id: CONFIG.ML_CLIENT_ID,
-        client_secret: CONFIG.ML_CLIENT_SECRET,
-        refresh_token: CONFIG.ML_REFRESH_TOKEN
+      body: new URLSearchParams({
+        'grant_type': 'client_credentials',
+        'client_id': CONFIG.ML_CLIENT_ID,
+        'client_secret': CONFIG.ML_CLIENT_SECRET
       })
     });
 
     const data = await response.json();
     
     if (data.access_token) {
-      console.log('✅ Access Token gerado com sucesso');
+      console.log('✅ Access Token Mercado Livre gerado');
       return data.access_token;
     } else {
-      throw new Error(`Erro ao gerar token: ${JSON.stringify(data)}`);
+      console.log('❌ Erro na autenticação:', data);
+      throw new Error(`Falha na autenticação: ${JSON.stringify(data)}`);
     }
   } catch (error) {
-    console.error('❌ Erro ao gerar access token:', error);
+    console.error('❌ Erro crítico na autenticação:', error);
     throw error;
+  }
+}
+
+export async function buscarEnviosRecentes(accessToken) {
+  try {
+    console.log('📦 Buscando envios recentes...');
+    
+    // Tentar diferentes endpoints da API
+    const endpoints = [
+      `https://api.mercadolibre.com/users/${CONFIG.ML_USER_ID}/shipments/search?sort=date_created_desc&limit=10`,
+      `https://api.mercadolibre.com/shipments/search?user_id=${CONFIG.ML_USER_ID}&sort=date_created_desc&limit=10`,
+      `https://api.mercadolibre.com/users/${CONFIG.ML_USER_ID}/shipping_options?access_token=${accessToken}`
+    ];
+
+    let envios = [];
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🔍 Tentando endpoint: ${endpoint.split('?')[0]}`);
+        const response = await fetch(endpoint, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+          console.log(`⚠️ Endpoint não funcionou: ${data.message}`);
+          continue;
+        }
+
+        if (data.shipments || data.results) {
+          envios = data.shipments || data.results || [];
+          console.log(`✅ Encontrados ${envios.length} envios no endpoint: ${endpoint.split('?')[0]}`);
+          break;
+        }
+      } catch (error) {
+        console.log(`⚠️ Erro no endpoint ${endpoint.split('?')[0]}: ${error.message}`);
+      }
+    }
+
+    return envios;
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar envios:', error);
+    return [];
   }
 }
 
@@ -46,7 +95,7 @@ export async function buscarDadosShipment(shipmentId, accessToken) {
       throw new Error(`Erro na API: ${shipmentData.message}`);
     }
 
-    console.log('✅ Dados do shipment obtidos:', shipmentId);
+    console.log('✅ Dados do shipment obtidos');
     
     // Extrair informações relevantes
     return {
