@@ -2,6 +2,9 @@
   "functions": {
     "api/webhook.js": {
       "maxDuration": 30
+    },
+    "api/check-shipments.js": {
+      "maxDuration": 60
     }
   },
   "routes": [
@@ -9,6 +12,11 @@
       "src": "/api/webhook",
       "methods": ["GET", "POST", "OPTIONS"],
       "dest": "/api/webhook.js"
+    },
+    {
+      "src": "/api/check-shipments",
+      "methods": ["GET", "POST", "OPTIONS"],
+      "dest": "/api/check-shipments.js"
     },
     {
       "src": "/(.*)",
