@@ -1,12 +1,12 @@
 export const CONFIG = {
-  // Mercado Livre - CREDENCIAIS VÁLIDAS!
+  // Mercado Livre - USE ESTAS CREDENCIAIS!
   ML_CLIENT_ID: '4660475068392971',
   ML_CLIENT_SECRET: 'QsMuIGHGJn2PCazOJmgH7DLFbRXapSe0',
   ML_ACCESS_TOKEN: 'APP_USR-4660475068392971-100217-38a837a083c97cd936323eed821fc82c-73605926',
   ML_REFRESH_TOKEN: 'TG-68def433c99d3f0001b4515a-73605926',
   ML_USER_ID: '73605926',
   
-  // Google Sheets
+  // Google Sheets (mantenha igual)
   GOOGLE_SHEET_ID: '1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8',
   GOOGLE_SERVICE_ACCOUNT_EMAIL: 'webhook-mercado-livre@webhook-mercado-livre.iam.gserviceaccount.com',
   GOOGLE_PRIVATE_KEY: `-----BEGIN PRIVATE KEY-----
@@ -38,6 +38,5 @@ KMmkSlaLlfpXIzjmkkxX+IxYyCjvs6WP+SqIkTLCtvd6SakwHcvE/9NUETNUawWq
 DIEPrlk8axICBfzFmH4MKNk=
 -----END PRIVATE KEY-----`,
   
-  // Webhook
   WEBHOOK_URL: 'https://webhook-mercado-livrev1.vercel.app/api/webhook'
 };
