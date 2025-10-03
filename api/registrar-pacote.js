@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('=== 📦 REGISTRAR PACOTE - QR CODE RAW ===');
+    console.log('=== 📦 REGISTRAR PACOTE - HYPERLINK SOLUTION ===');
     
     if (req.method === 'POST') {
       const body = await readBody(req);
@@ -43,16 +43,16 @@ module.exports = async function handler(req, res) {
         console.log('✅ Aba criada');
       }
 
-      // 4. Gerar QR Code - FÓRMULA BRUTA
+      // 4. Gerar QR Code - HYPERLINK em vez de IMAGE
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(codigo)}`;
-      const qrCodeFormula = `=IMAGE("${qrCodeUrl}")`;
-      console.log('📱 QR Code Formula:', qrCodeFormula);
+      const qrCodeHyperlink = `=HYPERLINK("${qrCodeUrl}", "🔗 QR Code")`;
+      console.log('📱 QR Code URL:', qrCodeUrl);
       
-      // 5. Preparar dados SEM fórmula primeiro
+      // 5. Preparar dados - HYPERLINK na coluna QR-CODE
       const novaLinha = {
         'Plataforma': plataforma || 'Mercado Livre',
         'Pacote/Código': codigo,
-        'QR-CODE': 'Gerando QR Code...', // ✅ Valor temporário
+        'QR-CODE': qrCodeHyperlink, // ✅ HYPERLINK clicável
         'Base': base || 'Matriz',
         'Data / Hora': new Date().toLocaleString('pt-BR'),
         'Motoboy': motoboy || 'A definir',
@@ -60,25 +60,15 @@ module.exports = async function handler(req, res) {
         'Status': 'coletado'
       };
 
-      // 6. Salvar linha primeiro
+      // 6. Salvar na planilha
       await sheet.addRow(novaLinha);
-      console.log('✅ Linha salva inicialmente');
-
-      // 7. AGORA ATUALIZAR a célula QR-CODE com a fórmula
-      const rows = await sheet.getRows();
-      const ultimaLinha = rows[rows.length - 1];
-      
-      // Atualizar apenas a célula QR-CODE com a fórmula
-      ultimaLinha['QR-CODE'] = qrCodeFormula;
-      await ultimaLinha.save();
-      
-      console.log('✅ QR Code fórmula aplicada');
+      console.log('✅ Dados salvos com HYPERLINK');
 
       return res.status(200).json({
         success: true,
-        message: '✅ Pacote registrado com QR Code!',
+        message: '✅ Pacote registrado! Clique no link do QR Code na planilha.',
         codigo: codigo,
-        qr_code: qrCodeUrl,
+        qr_code_url: qrCodeUrl,
         planilha: 'https://docs.google.com/spreadsheets/d/1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8'
       });
     }
