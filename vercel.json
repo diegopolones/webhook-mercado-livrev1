@@ -6,7 +6,7 @@
     "api/registrar-pacote.js": {
       "maxDuration": 30
     },
-    "api/buscar-envios.js": {
+    "api/buscar-novos-pacotes.js": {
       "maxDuration": 60
     }
   },
@@ -17,14 +17,14 @@
       "dest": "/api/webhook.js"
     },
     {
-      "src": "/api/registrar-pacote", 
+      "src": "/api/registrar-pacote",
       "methods": ["GET", "POST", "OPTIONS"],
       "dest": "/api/registrar-pacote.js"
     },
     {
-      "src": "/api/buscar-envios",
+      "src": "/api/buscar-novos-pacotes",
       "methods": ["GET", "POST", "OPTIONS"],
-      "dest": "/api/buscar-envios.js"
+      "dest": "/api/buscar-novos-pacotes.js"
     },
     {
       "src": "/(.*)",
