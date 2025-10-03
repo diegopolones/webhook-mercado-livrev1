@@ -11,11 +11,11 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('=== 📦 REGISTRAR PACOTE - MENUS DINÂMICOS ===');
+    console.log('=== 📦 REGISTRAR PACOTE - HORÁRIO PERSONALIZADO ===');
     
     if (req.method === 'POST') {
       const body = await readBody(req);
-      const { codigo, plataforma, endereco } = body;
+      const { codigo, data_hora, endereco } = body;
       
       console.log('📦 Registrando pacote:', codigo);
 
@@ -43,53 +43,54 @@ module.exports = async function handler(req, res) {
         console.log('✅ Aba criada');
       }
 
-      // 4. Gerar QR Code
+      // 4. Usar horário personalizado ou horário atual
+      const dataHora = data_hora || new Date().toLocaleString('pt-BR');
+      
+      // 5. Gerar QR Code - PRECISAMOS DO FORMATO CORRETO
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(codigo)}`;
       console.log('📱 QR Code URL:', qrCodeUrl);
       
-      // 5. Preparar dados - MENUS EM BRANCO para você selecionar
+      // 6. Preparar dados
       const novaLinha = {
-        'Plataforma': plataforma || 'Mercado Livre',
+        'Plataforma': 'Mercado Livre',
         'Pacote/Código': codigo,
-        'QR Code': qrCodeUrl, // ✅ URL do QR Code (O MAIS IMPORTANTE)
-        'Base': '', // ✅ EM BRANCO - você seleciona no menu suspenso
-        'Data/Hora': new Date().toLocaleString('pt-BR'),
-        'Diego Oliveira': '', // ✅ EM BRANCO - você seleciona no menu suspenso
+        'QR Code': qrCodeUrl,
+        'Base': '',
+        'Data/Hora': dataHora, // ✅ Horário personalizado
+        'Diego Oliveira': '',
         'Endereço': endereco || 'Endereço a confirmar',
         'Status': 'coletado'
       };
 
-      // 6. Salvar na planilha
+      // 7. Salvar na planilha
       await sheet.addRow(novaLinha);
-      console.log('✅ Dados salvos - menus em branco para seleção');
+      console.log('✅ Dados salvos com horário:', dataHora);
 
       return res.status(200).json({
         success: true,
-        message: '✅ Pacote registrado! QR Code salvo. Selecione Base e Motoboy nos menus suspensos.',
+        message: '✅ Pacote registrado!',
         codigo: codigo,
+        data_hora: dataHora,
         qr_code_url: qrCodeUrl,
-        instrucoes: [
-          '1. Copie a URL da coluna "QR Code" para ver o QR Code',
-          '2. Selecione a Base correta no menu suspenso',
-          '3. Selecione o Motoboy correto no menu suspenso'
-        ],
-        planilha: 'https://docs.google.com/spreadsheets/d/1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8'
+        observacoes: [
+          'Horário usado: ' + dataHora,
+          'QR Code gerado com formato básico',
+          'Para QR Code idêntico ao físico, precisamos do formato exato'
+        ]
       });
     }
 
-    // GET - Instruções simplificadas
+    // GET
     return res.status(200).json({
       success: true,
       message: '✅ Sistema de registro - ONLINE',
       instrucoes: {
         metodo: 'POST',
-        url: '/api/registrar-pacote',
         body: {
-          codigo: 'ML123456789', // ← Código do pacote (OBRIGATÓRIO)
-          plataforma: 'Mercado Livre', // ← Plataforma (OPCIONAL)
-          endereco: 'Endereço de entrega' // ← Endereço (OPCIONAL)
-        },
-        observacao: 'Base e Motoboy ficam em branco para você selecionar nos menus suspensos da planilha'
+          codigo: '45612192133', // Obrigatório
+          data_hora: '03/10/2024 14:30:00', // Opcional - horário real do bip
+          endereco: 'Endereço' // Opcional
+        }
       }
     });
     
