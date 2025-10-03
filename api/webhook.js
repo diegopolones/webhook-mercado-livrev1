@@ -1,8 +1,4 @@
-import { CONFIG } from '../config.js';
-import { gerarAccessToken, buscarDadosShipment } from '../mercado-livre.js';
-import { salvarNoGoogleSheets } from '../google-sheets.js';
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -18,92 +14,26 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
       const body = await readBody(req);
-      console.log('📦 Notificação:', JSON.stringify(body, null, 2));
-      
-      // Processar notificação
-      const resultado = await processarNotificacao(body);
+      console.log('📦 Notificação:', body);
       
       return res.status(200).json({ 
         status: 'OK', 
-        message: 'Notificação processada com sucesso',
-        timestamp: new Date().toISOString(),
-        processado: resultado
+        message: 'Notificação recebida',
+        timestamp: new Date().toISOString()
       });
     }
     
-    // Resposta para GET - Status do webhook
+    // Resposta para GET
     return res.status(200).json({ 
       status: 'ONLINE', 
       message: 'Webhook Mercado Livre - Pronto para produção',
-      webhook_url: CONFIG.WEBHOOK_URL,
-      next_steps: [
-        '✅ Webhook configurado e testado',
-        '🔄 Implementar autenticação Mercado Livre',
-        '📦 Buscar dados completos dos shipments',
-        '📊 Integrar com Google Sheets'
-      ]
+      webhook_url: 'https://webhook-mercado-livrev1.vercel.app/api/webhook'
     });
     
   } catch (error) {
     console.error('❌ Erro:', error);
     return res.status(500).json({ error: error.message });
   }
-}
-
-// Processar notificação COMPLETA
-async function processarNotificacao(notificacao) {
-  console.log('🔍 Processando notificação...');
-  
-  let shippingId = null;
-  
-  // Identificar o shipping_id baseado no tipo de notificação
-  if (notificacao.action === 'shipment.created' && notificacao.data) {
-    shippingId = notificacao.data.shipment_id;
-  } else if (notificacao.topic === 'shipments' && notificacao.resource) {
-    shippingId = notificacao.resource.split('/')[2];
-  } else if (notificacao.action === 'test.created') {
-    console.log('✅ Webhook testado com sucesso!');
-    return { tipo: 'test', status: 'webhook_funcionando' };
-  }
-  
-  if (shippingId) {
-    console.log('📦 Shipment ID encontrado:', shippingId);
-    
-    try {
-      // 🔑 PASSO 1: Gerar access token
-      const accessToken = await gerarAccessToken();
-      
-      // 📦 PASSO 2: Buscar dados completos do shipment
-      const shipmentData = await buscarDadosShipment(shippingId, accessToken);
-      
-      // 📊 PASSO 3: Salvar no Google Sheets
-      const sheetResult = await salvarNoGoogleSheets(shipmentData);
-      
-      return {
-        tipo: notificacao.action || notificacao.topic,
-        shipping_id: shippingId,
-        shipment_data: shipmentData,
-        sheet_result: sheetResult,
-        processado_em: new Date().toISOString(),
-        status: 'dados_salvos'
-      };
-    } catch (error) {
-      console.error('❌ Erro no processamento:', error);
-      return {
-        tipo: notificacao.action || notificacao.topic,
-        shipping_id: shippingId,
-        processado_em: new Date().toISOString(),
-        status: 'erro',
-        erro: error.message
-      };
-    }
-  }
-  
-  return {
-    tipo: notificacao.action || notificacao.topic,
-    processado_em: new Date().toISOString(),
-    status: 'sem_shipping_id'
-  };
 }
 
 // Helper para ler o body
