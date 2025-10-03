@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('=== 📦 REGISTRAR PACOTE - QR CODE FIX ===');
+    console.log('=== 📦 REGISTRAR PACOTE - QR CODE RAW ===');
     
     if (req.method === 'POST') {
       const body = await readBody(req);
@@ -43,16 +43,16 @@ module.exports = async function handler(req, res) {
         console.log('✅ Aba criada');
       }
 
-      // 4. Gerar QR Code - FÓRMULA IMAGE
+      // 4. Gerar QR Code - FÓRMULA BRUTA
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(codigo)}`;
       const qrCodeFormula = `=IMAGE("${qrCodeUrl}")`;
-      console.log('📱 QR Code gerado:', qrCodeUrl);
+      console.log('📱 QR Code Formula:', qrCodeFormula);
       
-      // 5. Preparar dados
+      // 5. Preparar dados SEM fórmula primeiro
       const novaLinha = {
         'Plataforma': plataforma || 'Mercado Livre',
         'Pacote/Código': codigo,
-        'QR-CODE': qrCodeFormula, // ✅ FÓRMULA IMAGE
+        'QR-CODE': 'Gerando QR Code...', // ✅ Valor temporário
         'Base': base || 'Matriz',
         'Data / Hora': new Date().toLocaleString('pt-BR'),
         'Motoboy': motoboy || 'A definir',
@@ -60,14 +60,25 @@ module.exports = async function handler(req, res) {
         'Status': 'coletado'
       };
 
-      // 6. Salvar na planilha
+      // 6. Salvar linha primeiro
       await sheet.addRow(novaLinha);
-      console.log('✅ Dados salvos na planilha');
+      console.log('✅ Linha salva inicialmente');
+
+      // 7. AGORA ATUALIZAR a célula QR-CODE com a fórmula
+      const rows = await sheet.getRows();
+      const ultimaLinha = rows[rows.length - 1];
+      
+      // Atualizar apenas a célula QR-CODE com a fórmula
+      ultimaLinha['QR-CODE'] = qrCodeFormula;
+      await ultimaLinha.save();
+      
+      console.log('✅ QR Code fórmula aplicada');
 
       return res.status(200).json({
         success: true,
         message: '✅ Pacote registrado com QR Code!',
         codigo: codigo,
+        qr_code: qrCodeUrl,
         planilha: 'https://docs.google.com/spreadsheets/d/1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8'
       });
     }
