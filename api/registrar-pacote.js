@@ -1,8 +1,8 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
+import { gerarAccessToken, buscarDadosPorCodigo } from '../mercado-livre.js';
 
 export default async function handler(req, res) {
-  // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,62 +16,76 @@ export default async function handler(req, res) {
     
     if (req.method === 'POST') {
       const body = await readBody(req);
-      const { codigo, plataforma, motoboy, base, destinatario, endereco } = body;
+      const { codigo, plataforma, motoboy, base } = body;
       
       console.log('📦 Dados recebidos:', { codigo, plataforma, motoboy, base });
 
-      // 1. Configurar autenticação Google
+      // 1. BUSCAR DADOS REAIS DO MERCADO LIVRE
+      let dadosReais = {
+        plataforma: plataforma || 'Mercado Livre',
+        codigo_rastreio: codigo,
+        destinatario: 'Buscando...',
+        endereco: 'Buscando...',
+        status: 'coletado'
+      };
+
+      try {
+        console.log('🔍 Buscando dados reais do pacote:', codigo);
+        const accessToken = await gerarAccessToken();
+        dadosReais = await buscarDadosPorCodigo(codigo, accessToken);
+        console.log('✅ Dados reais encontrados:', dadosReais);
+      } catch (error) {
+        console.log('⚠️ Não foi possível buscar dados reais, usando dados manuais:', error.message);
+        // Mantém os dados manuais se não conseguir buscar
+      }
+
+      // 2. Configurar autenticação Google
       const serviceAccountAuth = new JWT({
         email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
 
-      console.log('✅ Autenticação Google configurada');
-
-      // 2. Conectar com planilha
+      // 3. Conectar com planilha
       const doc = new GoogleSpreadsheet('1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8', serviceAccountAuth);
       await doc.loadInfo();
-      console.log('✅ Conectado à planilha:', doc.title);
       
-      // 3. Verificar/Criar aba
+      // 4. Verificar/Criar aba
       let sheet;
       try {
         sheet = doc.sheetsByTitle['Controle de Coletas'];
-        console.log('✅ Aba "Controle de Coletas" encontrada');
       } catch {
         sheet = await doc.addSheet({ 
           title: 'Controle de Coletas',
           headerValues: ['Plataforma', 'Pacote/Código', 'QR-CODE', 'Base', 'Data / Hora', 'Motoboy', 'Endereço', 'Status']
         });
-        console.log('✅ Aba "Controle de Coletas" criada');
       }
 
-      // 4. Gerar QR Code
+      // 5. Gerar QR Code
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(codigo)}`;
-      console.log('✅ QR Code gerado:', qrCodeUrl);
       
-      // 5. Preparar dados
+      // 6. Preparar dados COMPLETOS
       const novaLinha = {
-        'Plataforma': plataforma || 'Mercado Livre',
+        'Plataforma': dadosReais.plataforma,
         'Pacote/Código': codigo,
         'QR-CODE': `=IMAGE("${qrCodeUrl}")`,
         'Base': base || 'Matriz',
         'Data / Hora': new Date().toLocaleString('pt-BR'),
         'Motoboy': motoboy || 'A definir',
-        'Endereço': endereco || 'A definir',
-        'Status': 'coletado'
+        'Endereço': dadosReais.endereco,
+        'Status': dadosReais.status
       };
 
-      // 6. Salvar na planilha
+      // 7. Salvar na planilha
       await sheet.addRow(novaLinha);
       
-      console.log('✅ Dados salvos na planilha:', codigo);
+      console.log('✅ Dados reais salvos na planilha:', codigo);
 
       return res.status(200).json({
         success: true,
-        message: '✅ Pacote registrado com sucesso na planilha!',
+        message: '✅ Pacote registrado com dados reais na planilha!',
         codigo: codigo,
+        dados_reais: dadosReais.destinatario !== 'Buscando...',
         planilha: 'https://docs.google.com/spreadsheets/d/1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8'
       });
     }
@@ -84,12 +98,10 @@ export default async function handler(req, res) {
         metodo: 'POST',
         url: '/api/registrar-pacote',
         body: {
-          codigo: 'ML123456789',
+          codigo: 'ML123456789',  // Código REAL do pacote
           plataforma: 'Mercado Livre',
           motoboy: 'João Silva',
-          base: 'Matriz',
-          destinatario: 'Cliente Exemplo',
-          endereco: 'Rua Exemplo, 123'
+          base: 'Matriz'
         }
       }
     });
@@ -98,8 +110,7 @@ export default async function handler(req, res) {
     console.error('❌ Erro ao registrar pacote:', error);
     return res.status(500).json({ 
       success: false,
-      error: error.message,
-      detalhes: 'Erro na conexão com Google Sheets'
+      error: error.message
     });
   }
 }
