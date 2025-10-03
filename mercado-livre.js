@@ -129,4 +129,52 @@ function extrairEndereco(shipmentData) {
     return `${addr.address_line || ''}, ${addr.street_name || ''} ${addr.street_number || ''} - ${addr.city?.name || ''}, ${addr.state?.name || ''}`.trim();
   }
   return 'Endereço não informado';
+
+  export async function buscarDadosPorCodigo(codigoRastreio, accessToken) {
+  try {
+    console.log(`🔍 Buscando dados do pacote: ${codigoRastreio}`);
+    
+    // Tentar buscar por tracking number
+    const response = await fetch(`https://api.mercadolibre.com/shipments/search?tracking_number=${codigoRastreio}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(`Erro na API: ${data.message}`);
+    }
+
+    if (data.results && data.results.length > 0) {
+      const shipment = data.results[0];
+      
+      // Buscar dados completos do shipment
+      const shipmentDetail = await fetch(`https://api.mercadolibre.com/shipments/${shipment.id}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      const detailData = await shipmentDetail.json();
+      
+      return {
+        plataforma: 'Mercado Livre',
+        codigo_rastreio: codigoRastreio,
+        shipping_id: shipment.id,
+        destinatario: detailData.receiver_address?.receiver_name || 'Não encontrado',
+        endereco: extrairEndereco(detailData),
+        status: detailData.status || 'coletado',
+        data_criacao: detailData.date_created
+      };
+    }
+    
+    throw new Error('Pacote não encontrado no Mercado Livre');
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar dados do pacote:', error);
+    throw error;
+  }
+}
 }
