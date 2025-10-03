@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('=== 📦 REGISTRAR PACOTE - HYPERLINK SOLUTION ===');
+    console.log('=== 📦 REGISTRAR PACOTE - URL SIMPLES ===');
     
     if (req.method === 'POST') {
       const body = await readBody(req);
@@ -43,16 +43,15 @@ module.exports = async function handler(req, res) {
         console.log('✅ Aba criada');
       }
 
-      // 4. Gerar QR Code - HYPERLINK em vez de IMAGE
+      // 4. Gerar QR Code - URL SIMPLES (SEM fórmulas)
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(codigo)}`;
-      const qrCodeHyperlink = `=HYPERLINK("${qrCodeUrl}", "🔗 QR Code")`;
       console.log('📱 QR Code URL:', qrCodeUrl);
       
-      // 5. Preparar dados - HYPERLINK na coluna QR-CODE
+      // 5. Preparar dados - URL SIMPLES na coluna QR-CODE
       const novaLinha = {
         'Plataforma': plataforma || 'Mercado Livre',
         'Pacote/Código': codigo,
-        'QR-CODE': qrCodeHyperlink, // ✅ HYPERLINK clicável
+        'QR-CODE': qrCodeUrl, // ✅ URL SIMPLES (sempre funciona)
         'Base': base || 'Matriz',
         'Data / Hora': new Date().toLocaleString('pt-BR'),
         'Motoboy': motoboy || 'A definir',
@@ -62,13 +61,14 @@ module.exports = async function handler(req, res) {
 
       // 6. Salvar na planilha
       await sheet.addRow(novaLinha);
-      console.log('✅ Dados salvos com HYPERLINK');
+      console.log('✅ Dados salvos com URL do QR Code');
 
       return res.status(200).json({
         success: true,
-        message: '✅ Pacote registrado! Clique no link do QR Code na planilha.',
+        message: '✅ Pacote registrado! URL do QR Code salva na planilha.',
         codigo: codigo,
         qr_code_url: qrCodeUrl,
+        instrucoes: 'Copie a URL da coluna QR-CODE e cole no navegador para ver o QR Code',
         planilha: 'https://docs.google.com/spreadsheets/d/1OLsHJyDRl8G9Be_fEvv11LCCmOq5jz2-WqPzTVN0EN8'
       });
     }
